@@ -95,17 +95,21 @@ namespace PinyuanDB
 
         private void cbbCompanyName_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selectClientID = cbbCompanyName.SelectedValue.ToString();
-            string sql = "select CompanyName as '客戶名稱', Tel as '電話', Fax as '傳真', Address as '地址', TaxIDNumber as '統編' from Client where ClientID = @ClientID";
-            Dictionary<string, string> dc = new Dictionary<string, string>();
-            dc.Add("@ClientID", selectClientID);
-            dt = pinyuanDB.Select(sql, dc);
-            txtClientName.Text = dt.Rows[0]["客戶名稱"].ToString();
-            txtTel.Text = dt.Rows[0]["電話"].ToString();
-            txtFax.Text = dt.Rows[0]["傳真"].ToString();
-            txtAddress.Text = dt.Rows[0]["地址"].ToString();
-            txtTaxID.Text = dt.Rows[0]["統編"].ToString();
-            btnEditClient.Enabled = true;
+            if (Convert.ToInt32(cbbCompanyName.SelectedValue) > 0)
+            {
+                string selectClientID = cbbCompanyName.SelectedValue.ToString();
+                string sql = "select CompanyName as '客戶名稱', Tel as '電話', Fax as '傳真', Address as '地址', TaxIDNumber as '統編' from Client where ClientID = @ClientID";
+                Dictionary<string, string> dc = new Dictionary<string, string>();
+                dc.Add("@ClientID", selectClientID);
+                DataTable dt1 = new DataTable();
+                dt1 = pinyuanDB.Select(sql, dc);
+                txtClientName.Text = dt1.Rows[0]["客戶名稱"].ToString();
+                txtTel.Text = dt1.Rows[0]["電話"].ToString();
+                txtFax.Text = dt1.Rows[0]["傳真"].ToString();
+                txtAddress.Text = dt1.Rows[0]["地址"].ToString();
+                txtTaxID.Text = dt1.Rows[0]["統編"].ToString();
+                btnEditClient.Enabled = true;
+            }
         }
 
         // 開啟編輯狀態
@@ -116,6 +120,7 @@ namespace PinyuanDB
             txtFax.ReadOnly = false;
             txtAddress.ReadOnly = false;
             txtTaxID.ReadOnly = false;
+            btnUpdateClient.Enabled = true;
         }
 
         private void btnUpdateClient_Click(object sender, EventArgs e)

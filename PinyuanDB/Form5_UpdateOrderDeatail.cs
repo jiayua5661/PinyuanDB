@@ -155,6 +155,10 @@ namespace PinyuanDB
                             // 跳過未填寫的列（因為 AllowUserToAddRows 會自動添加一空行）
                             if (row.IsNewRow) continue;
 
+                            sql = "select count(*) from Order_Detail where OrderID = @OrderID";
+                            dc.Clear();
+                            dc.Add("@OrderID", oriOrderID);
+                            int oriOrderOrderDetailcnt = Convert.ToInt32(pinyuanDB.SelectExecuteScalar(sql, dc).ToString());
                             // 取得 DataGridView 中的資料
                             // oriOrderID 
                             string productName = row.Cells["產品名稱"].Value?.ToString();
@@ -162,16 +166,29 @@ namespace PinyuanDB
                             string price = row.Cells["單價"].Value?.ToString();
                             string orderDetailID = row.Cells["OrdeDetailID"].Value.ToString();
 
-                            txtresult.Text += $"{productName}, {amount}, {price}\r\n";
-                            sql = "update Order_Detail set OrderID = @OrderID, ProductName = @ProductName, Amount = @Amount, Price = @Price  where OrdeDetailID = @OrdeDetailID";
-                            dc.Clear();
-                            dc.Add("@OrderID", oriOrderID);
-                            dc.Add("@ProductName", productName);
-                            dc.Add("@Amount", amount);
-                            dc.Add("@Price", price);
-                            dc.Add("@OrdeDetailID", orderDetailID);
+                            // 原本就存在的 更新
+                            if (orderDetailUpdateCnt < oriOrderOrderDetailcnt)
+                            {
+                                txtresult.Text += $"{productName}, {amount}, {price}\r\n";
+                                sql = "update Order_Detail set OrderID = @OrderID, ProductName = @ProductName, Amount = @Amount, Price = @Price  where OrdeDetailID = @OrdeDetailID";
+                                dc.Clear();
+                                dc.Add("@OrderID", oriOrderID);
+                                dc.Add("@ProductName", productName);
+                                dc.Add("@Amount", amount);
+                                dc.Add("@Price", price);
+                                dc.Add("@OrdeDetailID", orderDetailID);
 
-                            orderDetailUpdateCnt += pinyuanDB.Update(sql, dc);
+                                orderDetailUpdateCnt += pinyuanDB.Update(sql, dc);
+                            }
+                            else // 新增的資料列 insert
+                            {
+                                // 插入資料的 SQL 語句
+                                sql = "INSERT INTO Order_Detail (OrderID, ProductName, Amount, Price) VALUES (@OrderID, @ProductName, @Amount, @Price)";
+                                orderDetailUpdateCnt += pinyuanDB.Insert(sql, oriOrderID, productName, amount, price);
+                            }
+
+
+
                         }
                         MessageBox.Show($"成功更新{ordersUpdateCnt}筆訂單，{orderDetailUpdateCnt}筆訂單明細");
                         this.Close();// 儲存完 關閉表單

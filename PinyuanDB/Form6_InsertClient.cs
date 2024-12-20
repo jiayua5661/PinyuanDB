@@ -39,28 +39,32 @@ namespace PinyuanDB
 
         private void btnNewClient_Click(object sender, EventArgs e)
         {
-            // 先找有沒有重複名字的
-            int existCompanyName;
-            Dictionary<string, string> dc = new Dictionary<string, string>();
-            string sql = "select count(*) from Client where CompanyName = @CompanyName";
-            dc.Add("@CompanyName", txtClientName.Text.Trim());
-            existCompanyName = Convert.ToInt32(pinyuanDB.SelectExecuteScalar(sql, dc).ToString());
-
-            if (existCompanyName == 0 && !string.IsNullOrWhiteSpace(txtClientName.Text))
+            DialogResult insertClient = MessageBox.Show("確定新增客戶?", "提醒", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            if(insertClient == DialogResult.OK)
             {
-                sql = "INSERT INTO Client (CompanyName, Tel, Fax, Address, TaxIDNumber) VALUES (@CompanyName, @Tel, @Fax, @Address, @TaxIDNumber)";
-                string companyName = txtClientName.Text.Trim();
-                string tel = txtTel.Text.Trim();
-                string fax = txtFax.Text.Trim();
-                string address = txtAddress.Text.Trim();
-                string taxIDNumber = txtTaxID.Text.Trim();
-                int cnt = pinyuanDB.Insert(sql, companyName, tel, fax, address, taxIDNumber);
-                MessageBox.Show($"成功新增{cnt}筆客戶資料");
-                ClearAllTextBox(this);
+                // 先找有沒有重複名字的
+                int existCompanyName;
+                Dictionary<string, string> dc = new Dictionary<string, string>();
+                string sql = "select count(*) from Client where CompanyName = @CompanyName";
+                dc.Add("@CompanyName", txtClientName.Text.Trim());
+                existCompanyName = Convert.ToInt32(pinyuanDB.SelectExecuteScalar(sql, dc).ToString());
+
+                if (existCompanyName == 0 && !string.IsNullOrWhiteSpace(txtClientName.Text))
+                {
+                    sql = "INSERT INTO Client (CompanyName, Tel, Fax, Address, TaxIDNumber) VALUES (@CompanyName, @Tel, @Fax, @Address, @TaxIDNumber)";
+                    string companyName = txtClientName.Text.Trim();
+                    string tel = txtTel.Text.Trim();
+                    string fax = txtFax.Text.Trim();
+                    string address = txtAddress.Text.Trim();
+                    string taxIDNumber = txtTaxID.Text.Trim();
+                    int cnt = pinyuanDB.Insert(sql, companyName, tel, fax, address, taxIDNumber);
+                    MessageBox.Show($"成功新增{cnt}筆客戶資料");
+                    ClearAllTextBox(this);
+                }
+                else if (string.IsNullOrWhiteSpace(txtClientName.Text))
+                { MessageBox.Show("客戶名稱不能空白", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                else MessageBox.Show("已有相同名稱公司", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (string.IsNullOrWhiteSpace(txtClientName.Text))
-            { MessageBox.Show("客戶名稱不能空白", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-            else MessageBox.Show("已有相同名稱公司", "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void btnBackToMain_Click(object sender, EventArgs e)
