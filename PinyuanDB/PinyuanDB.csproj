@@ -99,6 +99,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form3_SearchOrder.resx">
       <DependentUpon>Form3_SearchOrder.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Form4_UpdateOrder.resx">
       <DependentUpon>Form4_UpdateOrder.cs</DependentUpon>

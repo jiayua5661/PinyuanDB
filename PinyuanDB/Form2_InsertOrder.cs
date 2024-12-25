@@ -125,75 +125,82 @@ namespace PinyuanDB
         // 儲存訂單
         private void btnSaveOrder_Click(object sender, EventArgs e)
         {
-            string companyID = cbbCompanyName.SelectedValue.ToString();
-            string quoteNumber = txtQuoteNumber.Text;
-            string orderDate = dateOrderDate.Value.Date.ToString("yyyy-MM-dd");
-
-            // 最少要有一筆資料
-            int dataExit = 0;
-            // 檢查有沒有空的 沒填到的地方
-            int emptyCnt = 0;
-            foreach (DataGridViewRow row in dataGridView1.Rows)
+            if(cbbCompanyName.SelectedValue == null)
             {
-                // 跳過未填寫的列（因為 AllowUserToAddRows 會自動添加一空行）
-                if (row.IsNewRow) continue;
-
-                // 取得 DataGridView 中的資料
-                string productName = row.Cells["ProductName"].Value?.ToString();
-                string amount = row.Cells["Amount"].Value?.ToString();
-                string price = row.Cells["Price"].Value?.ToString();
-
-                // 如果手動刪除整行資料 不會是newrow 所以要判斷跳過
-                if (string.IsNullOrEmpty(productName) && string.IsNullOrEmpty(amount) && string.IsNullOrEmpty(price)) continue;
-
-                if (string.IsNullOrEmpty(productName) || string.IsNullOrEmpty(amount) || string.IsNullOrEmpty(price))
-                {
-                    emptyCnt++;
-                }
-
-                // 最少有一筆完整資料
-                if (!string.IsNullOrEmpty(productName) && !string.IsNullOrEmpty(amount) && !string.IsNullOrEmpty(price))
-                    dataExit = 1;
+                MessageBox.Show("請選擇客戶");
             }
-
-            // 確定儲存 詢問
-            DialogResult saveData = MessageBox.Show("確定儲存新訂單 ?", "新增訂單提醒", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-
-            if (saveData == DialogResult.OK) // msgBox 確定
+            else
             {
-                // 填寫完整 才insert
-                if (quoteNumber != "" && emptyCnt == 0 && dataExit == 1)
+                string companyID = cbbCompanyName.SelectedValue.ToString();
+                string quoteNumber = txtQuoteNumber.Text;
+                string orderDate = dateOrderDate.Value.Date.ToString("yyyy-MM-dd");
+
+                // 最少要有一筆資料
+                int dataExit = 0;
+                // 檢查有沒有空的 沒填到的地方
+                int emptyCnt = 0;
+                foreach (DataGridViewRow row in dataGridView1.Rows)
                 {
-                    string sql = "INSERT INTO Orders (CompanyID, OrderDate, QuoteNumber) VALUES (@CompanyID, @OrderDate, @QuoteNumber);SELECT SCOPE_IDENTITY();"; // 獲取當前insert後的ID
-                                                                                                                                                                            // insert 要拿insert orders 資料表的identity欄位的值 來insert order_detail表
-                    int ordersID = pinyuanDB.InsertGetInsertedID(sql, companyID, orderDate, quoteNumber);
-                    int orderDetailCnt = 0;
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    // 跳過未填寫的列（因為 AllowUserToAddRows 會自動添加一空行）
+                    if (row.IsNewRow) continue;
+
+                    // 取得 DataGridView 中的資料
+                    string productName = row.Cells["ProductName"].Value?.ToString();
+                    string amount = row.Cells["Amount"].Value?.ToString();
+                    string price = row.Cells["Price"].Value?.ToString();
+
+                    // 如果手動刪除整行資料 不會是newrow 所以要判斷跳過
+                    if (string.IsNullOrEmpty(productName) && string.IsNullOrEmpty(amount) && string.IsNullOrEmpty(price)) continue;
+
+                    if (string.IsNullOrEmpty(productName) || string.IsNullOrEmpty(amount) || string.IsNullOrEmpty(price))
                     {
-                        // 跳過未填寫的列（因為 AllowUserToAddRows 會自動添加一空行）
-                        if (row.IsNewRow) continue;
-
-                        // 取得 DataGridView 中的資料
-                        string productName = row.Cells["ProductName"].Value?.ToString().Trim();
-                        string amount = row.Cells["Amount"].Value?.ToString().Trim();
-                        string price = row.Cells["Price"].Value?.ToString().Trim();
-
-                        if (string.IsNullOrEmpty(productName) && string.IsNullOrEmpty(amount) && string.IsNullOrEmpty(price)) continue;
-
-                        if (string.IsNullOrEmpty(productName) || string.IsNullOrEmpty(amount) || string.IsNullOrEmpty(price))
-                        {
-                            MessageBox.Show("請確認所有資料行已填寫！");
-                            continue;
-                        }
-
-                        // 插入資料的 SQL 語句
-                        sql = "INSERT INTO Order_Detail (OrderID, ProductName, Amount, Price) VALUES (@OrderID, @ProductName, @Amount, @Price)";
-                        orderDetailCnt += pinyuanDB.Insert(sql, ordersID.ToString(), productName, amount, price);
+                        emptyCnt++;
                     }
-                    MessageBox.Show($"成功新增{orderDetailCnt}筆資料");
-                    InitInsertForm();
+
+                    // 最少有一筆完整資料
+                    if (!string.IsNullOrEmpty(productName) && !string.IsNullOrEmpty(amount) && !string.IsNullOrEmpty(price))
+                        dataExit = 1;
                 }
-                else MessageBox.Show("資料填寫不完整");
+
+                // 確定儲存 詢問
+                DialogResult saveData = MessageBox.Show("確定儲存新訂單 ?", "新增訂單提醒", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+
+                if (saveData == DialogResult.OK) // msgBox 確定
+                {
+                    // 填寫完整 才insert
+                    if (quoteNumber != "" && emptyCnt == 0 && dataExit == 1)
+                    {
+                        string sql = "INSERT INTO Orders (CompanyID, OrderDate, QuoteNumber) VALUES (@CompanyID, @OrderDate, @QuoteNumber);SELECT SCOPE_IDENTITY();"; // 獲取當前insert後的ID
+                                                                                                                                                                                // insert 要拿insert orders 資料表的identity欄位的值 來insert order_detail表
+                        int ordersID = pinyuanDB.InsertGetInsertedID(sql, companyID, orderDate, quoteNumber);
+                        int orderDetailCnt = 0;
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            // 跳過未填寫的列（因為 AllowUserToAddRows 會自動添加一空行）
+                            if (row.IsNewRow) continue;
+
+                            // 取得 DataGridView 中的資料
+                            string productName = row.Cells["ProductName"].Value?.ToString().Trim();
+                            string amount = row.Cells["Amount"].Value?.ToString().Trim();
+                            string price = row.Cells["Price"].Value?.ToString().Trim();
+
+                            if (string.IsNullOrEmpty(productName) && string.IsNullOrEmpty(amount) && string.IsNullOrEmpty(price)) continue;
+
+                            if (string.IsNullOrEmpty(productName) || string.IsNullOrEmpty(amount) || string.IsNullOrEmpty(price))
+                            {
+                                MessageBox.Show("請確認所有資料行已填寫！");
+                                continue;
+                            }
+
+                            // 插入資料的 SQL 語句
+                            sql = "INSERT INTO Order_Detail (OrderID, ProductName, Amount, Price) VALUES (@OrderID, @ProductName, @Amount, @Price)";
+                            orderDetailCnt += pinyuanDB.Insert(sql, ordersID.ToString(), productName, amount, price);
+                        }
+                        MessageBox.Show($"成功新增{orderDetailCnt}筆資料");
+                        InitInsertForm();
+                    }
+                    else MessageBox.Show("資料填寫不完整");
+                }
             }
         }
 
