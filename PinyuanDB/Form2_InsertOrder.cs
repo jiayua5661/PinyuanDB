@@ -55,27 +55,30 @@ namespace PinyuanDB
         }
         private void DataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            // 確定是 "Amount" 列時進行處理
-            // 確定當前編輯的是 "Amount" 列
-            if (dataGridView1.CurrentCell != null &&
-                dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["Amount"].Index)
+            if (e.Control is TextBox textBox)
             {
-                if (e.Control is TextBox textBox)
-                {
-                    textBox.KeyPress -= TextBox_KeyPress;
-                    textBox.TextChanged -= TextBox_TextChanged;
+                textBox.KeyPress -= TextBox_KeyPress;
+                textBox.TextChanged -= TextBox_TextChanged;
+                textBox.TextChanged -= TextBox_TextChanged9; // 只限制位數9
+                textBox.TextChanged -= TextBox_TextChanged50; // 只限制位數9
 
-                    textBox.KeyPress += TextBox_KeyPress; // 只限制數字
-                    textBox.TextChanged += TextBox_TextChanged; // 只限制位數
-                }
-            }
-            else
-            {
-                // 其他列移除限制
-                if (e.Control is TextBox textBox)
+                if (dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["Amount"].Index)
                 {
-                    textBox.KeyPress -= TextBox_KeyPress;
-                    textBox.TextChanged -= TextBox_TextChanged;
+                    textBox.KeyPress += TextBox_KeyPress; // 只限制數字
+                    textBox.TextChanged += TextBox_TextChanged; // 只限制位數4
+
+                }
+                else if(dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["Price"].Index)
+                {
+                    textBox.KeyPress += TextBox_KeyPress; // 只限制數字
+                    textBox.TextChanged += TextBox_TextChanged9; // 只限制位數9
+                }
+                else if(dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["ProductName"].Index)
+                {
+                    textBox.TextChanged += TextBox_TextChanged50; // 只限制位數50
                 }
             }
         }
@@ -89,14 +92,42 @@ namespace PinyuanDB
             }
         }
 
-        // 限制輸入位數為 5
+        private void TextBox_TextChanged50(object sender, EventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+
+            if (textBox.Text.Length > 50)
+            {
+                // 截取前 50位
+                textBox.Text = textBox.Text.Substring(0, 50);
+
+                // 將光標移到最後
+                textBox.SelectionStart = textBox.Text.Length;
+            }
+        }
+
+        private void TextBox_TextChanged9(object sender, EventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+
+            if (textBox.Text.Length > 9)
+            {
+                // 截取前 9 位
+                textBox.Text = textBox.Text.Substring(0, 9);
+
+                // 將光標移到最後
+                textBox.SelectionStart = textBox.Text.Length;
+            }
+        }
+
+        // 限制輸入位數為 4
         private void TextBox_TextChanged(object sender, EventArgs e)
         {
             TextBox textBox = sender as TextBox;
 
             if (textBox.Text.Length > 4)
             {
-                // 截取前 5 位
+                // 截取前 4 位
                 textBox.Text = textBox.Text.Substring(0, 4);
 
                 // 將光標移到最後
@@ -125,7 +156,7 @@ namespace PinyuanDB
         // 儲存訂單
         private void btnSaveOrder_Click(object sender, EventArgs e)
         {
-            if(cbbCompanyName.SelectedValue == null)
+            if (cbbCompanyName.SelectedValue == null)
             {
                 MessageBox.Show("請選擇客戶");
             }
@@ -171,7 +202,7 @@ namespace PinyuanDB
                     if (quoteNumber != "" && emptyCnt == 0 && dataExit == 1)
                     {
                         string sql = "INSERT INTO Orders (CompanyID, OrderDate, QuoteNumber) VALUES (@CompanyID, @OrderDate, @QuoteNumber);SELECT SCOPE_IDENTITY();"; // 獲取當前insert後的ID
-                                                                                                                                                                                // insert 要拿insert orders 資料表的identity欄位的值 來insert order_detail表
+                                                                                                                                                                      // insert 要拿insert orders 資料表的identity欄位的值 來insert order_detail表
                         int ordersID = pinyuanDB.InsertGetInsertedID(sql, companyID, orderDate, quoteNumber);
                         int orderDetailCnt = 0;
                         foreach (DataGridViewRow row in dataGridView1.Rows)

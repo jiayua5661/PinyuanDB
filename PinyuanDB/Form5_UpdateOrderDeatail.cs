@@ -29,6 +29,88 @@ namespace PinyuanDB
             oriQuoteNum = inputQuoteNum;
             oriOrderDate = inputOrderDate;
         }
+        #region 限制輸入
+        private void DataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is TextBox textBox)
+            {
+                textBox.KeyPress -= TextBox_KeyPress;
+                textBox.TextChanged -= TextBox_TextChanged;
+                textBox.TextChanged -= TextBox_TextChanged9; // 只限制位數9
+                textBox.TextChanged -= TextBox_TextChanged50; // 只限制位數9
+
+                if (dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["數量"].Index)
+                {
+                    textBox.KeyPress += TextBox_KeyPress; // 只限制數字
+                    textBox.TextChanged += TextBox_TextChanged; // 只限制位數4
+                }
+                else if (dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["單價"].Index)
+                {
+                    textBox.KeyPress += TextBox_KeyPress; // 只限制數字
+                    textBox.TextChanged += TextBox_TextChanged9; // 只限制位數9
+                }
+                else if (dataGridView1.CurrentCell != null &&
+    dataGridView1.CurrentCell.ColumnIndex == dataGridView1.Columns["產品名稱"].Index)
+                {
+                    textBox.TextChanged += TextBox_TextChanged50; // 只限制位數50
+                }
+            }
+        }
+
+        // 限制只能輸入數字（以及可選的退格鍵）
+        private void TextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true; // 禁止非數字輸入
+            }
+        }
+
+        private void TextBox_TextChanged50(object sender, EventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+
+            if (textBox.Text.Length > 50)
+            {
+                // 截取前 50位
+                textBox.Text = textBox.Text.Substring(0, 50);
+
+                // 將光標移到最後
+                textBox.SelectionStart = textBox.Text.Length;
+            }
+        }
+
+        private void TextBox_TextChanged9(object sender, EventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+
+            if (textBox.Text.Length > 9)
+            {
+                // 截取前 9 位
+                textBox.Text = textBox.Text.Substring(0, 9);
+
+                // 將光標移到最後
+                textBox.SelectionStart = textBox.Text.Length;
+            }
+        }
+
+        // 限制輸入位數為 4
+        private void TextBox_TextChanged(object sender, EventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+
+            if (textBox.Text.Length > 4)
+            {
+                // 截取前 4 位
+                textBox.Text = textBox.Text.Substring(0, 4);
+
+                // 將光標移到最後
+                textBox.SelectionStart = textBox.Text.Length;
+            }
+        }
+        #endregion
 
         private void Form5_UpdateOrderDeatail_Load(object sender, EventArgs e)
         {
@@ -62,6 +144,7 @@ namespace PinyuanDB
             dc.Add("@OrderID", oriOrderID);
             dataGridView1.DataSource = pinyuanDB.Select(sql, dc);
             dataGridView1.Columns["OrdeDetailID"].Visible = false; // 隱藏 不顯示在畫面上
+            dataGridView1.EditingControlShowing += DataGridView1_EditingControlShowing;
         }
 
         private void cbbCompanyName_TextUpdate(object sender, EventArgs e)
